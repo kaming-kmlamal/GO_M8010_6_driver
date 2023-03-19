@@ -1,5 +1,3 @@
-
-
 #include "GO_M8010_6_Driver.h"
 
 
@@ -28,25 +26,6 @@ void GO_M8010_init (){
 
 
 
-// GO_Motorfield GO_M8010_init (uint8_t id, uint8_t mode)
-// {   
-//     GO_Motorfield cmd;
-//     cmd.id    = id;
-//     cmd.mode  = mode;
-//     cmd.correct = 1;
-//     cmd.MError=0;
-//     cmd.Temp =0;
-//     cmd.tar_pos=0;
-//     cmd.T=0;
-//     cmd.W=0;
-//     cmd.Pos=0;
-//     cmd.footForce = 0;
-//     cmd.buffer[0] = 0xFE;
-//     cmd.buffer[1] = 0xEE;
-//     return cmd;
-// }
-
-
 
 uint8_t Temp_buffer[16];
 
@@ -57,12 +36,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     uint16_t crc = do_crc_table(Temp_buffer,sizeof(Temp_buffer)-2);
     if ((Temp_buffer[14] != (crc&0xFF)) || (Temp_buffer[15] != ((crc>>8) & 0xFF)))
     { 
-        HAL_GPIO_WritePin(GPIOH, GPIO_PIN_12, GPIO_PIN_SET);           // indicate CRC uncorrect
+        HAL_GPIO_WritePin(GPIOH, GPIO_PIN_12, GPIO_PIN_SET);           // indicate CRC incorrect
         return;
     }
 
     HAL_GPIO_WritePin(GPIOH, GPIO_PIN_12, GPIO_PIN_RESET);                 // indicate CRC correct
-    HAL_GPIO_WritePin(GPIOH, GPIO_PIN_11, GPIO_PIN_SET);                              // indicate GO_M8010_6 running 
+    HAL_GPIO_WritePin(GPIOH, GPIO_PIN_11, GPIO_PIN_SET);                   // indicate GO_M8010_6 running 
 
     GO_M8010_recv_data(Temp_buffer);
 
@@ -74,8 +53,8 @@ void uartTxCB(UART_HandleTypeDef *huart)
 }
 
 
-void GO_M8010_send_data(UART_HandleTypeDef *huart, int id,int rev,float T,float W,
-                         float Pos,float K_P,float K_W)
+void GO_M8010_send_data(UART_HandleTypeDef *huart, int id,int rev,float T,float Pos,
+                         float W,float K_P,float K_W)
 {
     // a pointer to target motor
     GO_Motorfield* motor;
@@ -160,14 +139,12 @@ void GO_M8010_recv_data(uint8_t* Temp_buffer)
     
 }
 
+// for differnt robot should have different define. Now just for testing first
 void basic_ForceControl (UART_HandleTypeDef *huart, int id, float bias, float length, float mass, 
                         float tar_pos, float tar_w, float K_P,float K_W)
 {
     float forw_T = mass* gravit_const* length* (cos(GO_motor_info[id].Pos));
     forw_T += bias;
-    forw_T =0;
-    // GO_M8010_send_data(huart,id,0,forw_T,tar_w,tar_pos,K_P,K_W);
-        GO_M8010_send_data(&huart1, id,0,forw_T,
-                         tar_w,6,0.02,0);
+    GO_M8010_send_data(huart,id,0,forw_T,tar_pos,tar_w,K_P,K_W);
 }
 

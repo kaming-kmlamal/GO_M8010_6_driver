@@ -32,14 +32,14 @@ uint8_t Temp_buffer[16];
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    // CRC checking
+    // CRC checking. if CRC checking fail the led will indicate and return 
     uint16_t crc = do_crc_table(Temp_buffer,sizeof(Temp_buffer)-2);
     if ((Temp_buffer[14] != (crc&0xFF)) || (Temp_buffer[15] != ((crc>>8) & 0xFF)))
     { 
         HAL_GPIO_WritePin(GPIOH, GPIO_PIN_12, GPIO_PIN_SET);           // indicate CRC incorrect
         return;
     }
-
+    // CRC pass and start converting data to the motor 
     HAL_GPIO_WritePin(GPIOH, GPIO_PIN_12, GPIO_PIN_RESET);                 // indicate CRC correct
     HAL_GPIO_WritePin(GPIOH, GPIO_PIN_11, GPIO_PIN_SET);                   // indicate GO_M8010_6 running 
 
@@ -112,15 +112,16 @@ void GO_M8010_send_data(UART_HandleTypeDef *huart, int id,int rev,float T,float 
 
 void GO_M8010_recv_data(uint8_t* Temp_buffer)
 {
+    // check for ID
     uint8_t ID=-1;
     GO_Motorfield* motor;
-
     ID = Temp_buffer[2] & 0xF;
 
+    // a pointer to target pointer
     motor = GO_motor_info + ID;
     memcpy(motor->Rec_buffer,Temp_buffer,16);
 
-    
+    // assign buffer to the target motor
     motor->mode = Temp_buffer[2]>>4 & 0xF;
     motor->correct = 1;
     motor->MError = 0;

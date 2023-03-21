@@ -70,22 +70,24 @@ typedef struct {
         ControlData_t  motor_send_data;  
 }GO_Motorfield;
 
+//motor init function 
 void GO_M8010_init ();
-// GO_Motorfield GO_M8010_init (uint8_t id, uint8_t mode);
 
+// send motor control message
 void GO_M8010_send_data(UART_HandleTypeDef *huart,int id, int rev,float T,float W,float Pos,float K_P,float K_W);
 
+//  transmittion interrupt callback
 void uartTxCB(UART_HandleTypeDef *huart);
 
+// data recv to the target motor
 void GO_M8010_recv_data(uint8_t* Temp_buffer);
 
+// testing force position mix fucntion 
 void basic_ForceControl (UART_HandleTypeDef *huart, int id, float bias, float length, float mass, 
                         float tar_pos, float tar_w, float K_P,float K_W);
 
+// motor array
 extern GO_Motorfield GO_motor_info[4];
-
-
-
 
 
 #endif /*__GO_M8010_6_H */
